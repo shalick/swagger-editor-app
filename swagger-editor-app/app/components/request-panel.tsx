@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useAuth } from "./auth-provider";
 import { detectFormat, getDefaultSpec, parseSpec, stringifySpec, type SpecFormat } from "../lib/swagger-editor";
+import { SwaggerViewer } from "./swagger-viewer";
 
 const DEFAULT_URL = "https://jsonplaceholder.typicode.com/todos/1";
 const STORAGE_KEY_PREFIX = "swagger-studio-saved-spec";
@@ -254,6 +255,20 @@ export function RequestPanel() {
           )}
         </section>
       </div>
+
+      {/* Swagger Viewer Section */}
+      {hasValidSpec && (
+        <section className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
+          <div className="mb-6">
+            <p className="text-sm font-semibold uppercase tracking-[0.35em] text-zinc-500">API Explorer</p>
+            <h2 className="mt-2 text-2xl font-semibold tracking-tight">Interactive Endpoint Browser</h2>
+            <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+              Explore all endpoints, view parameters and schemas, and test requests directly.
+            </p>
+          </div>
+          <SwaggerViewer spec={parsedSpec.value} specText={specText} />
+        </section>
+      )}
     </div>
   );
 }
