@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { AUTH_COOKIE_NAME, AUTH_COOKIE_MAX_AGE_SECONDS } from "../lib/auth-cookie";
 
 type AuthState = {
   token: string | null;
@@ -89,12 +90,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     setAuthState(nextState);
     persistAuth(nextState);
+
+    if (typeof document !== "undefined") {
+      document.cookie = `${AUTH_COOKIE_NAME}=${encodeURIComponent(token)}; path=/; max-age=${AUTH_COOKIE_MAX_AGE_SECONDS}; SameSite=Lax`;
+    }
   }, []);
 
   const signOut = useCallback(() => {
     const nextState = { token: null, expiresAt: null, isAuthenticated: false };
     setAuthState(nextState);
     persistAuth(nextState);
+
+    if (typeof document !== "undefined") {
+      document.cookie = `${AUTH_COOKIE_NAME}=; path=/; max-age=0; SameSite=Lax`;
+    }
   }, []);
 
   const value = useMemo(

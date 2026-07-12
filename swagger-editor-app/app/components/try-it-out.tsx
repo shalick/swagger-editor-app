@@ -82,11 +82,16 @@ export function TryItOut({ endpoint, baseUrl, onResponseChange }: TryItOutProps)
         responseHeaders[key] = value;
       });
 
+      const startedAt = performance.now();
       const responseData = {
         status: result.status,
         headers: responseHeaders,
         body: responseBody,
       };
+
+      const durationMs = Math.round(performance.now() - startedAt);
+      const requestSize = JSON.stringify({ headers: requestHeaders, body: requestInit.body }).length;
+      const responseSize = JSON.stringify(responseData).length;
 
       setResponse(responseData);
       onResponseChange?.(JSON.stringify(responseData, null, 2));
@@ -111,6 +116,10 @@ export function TryItOut({ endpoint, baseUrl, onResponseChange }: TryItOutProps)
               },
               response: responseData,
               timestamp: new Date().toISOString(),
+              durationMs,
+              requestSize,
+              responseSize,
+              error: null,
             }),
           });
         } catch {
@@ -118,14 +127,45 @@ export function TryItOut({ endpoint, baseUrl, onResponseChange }: TryItOutProps)
         }
       }
     } catch (error) {
-      setResponse({
+      const failureBody = `Request failed: ${error instanceof Error ? error.message : 'Unknown error'}`;
+      const failureResponse = {
         status: 0,
         headers: {},
-        body: `Request failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      });
-      onResponseChange?.(
-        `Request failed: ${error instanceof Error ? error.message : 'Unknown error'}`
-      );
+        body: failureBody,
+      };
+
+      setResponse(failureResponse);
+      onResponseChange?.(failureBody);
+
+      if (authState.isAuthenticated && authState.token) {
+        try {
+          await fetch('/api/request-history', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${authState.token}`,
+            },
+            body: JSON.stringify({
+              method: endpoint.method,
+              path: endpoint.path,
+              url,
+              parameters,
+              request: {
+                headers: { ...headers },
+                body: body || null,
+              },
+              response: failureResponse,
+              timestamp: new Date().toISOString(),
+              durationMs: 0,
+              requestSize: JSON.stringify({ headers: { ...headers }, body: body || null }).length,
+              responseSize: JSON.stringify(failureResponse).length,
+              error: failureBody,
+            }),
+          });
+        } catch {
+          // Silently fail request tracking
+        }
+      }
     } finally {
       setIsLoading(false);
     }
