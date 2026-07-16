@@ -4,11 +4,15 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
 import { useAuth } from "../components/auth-provider";
+import { useI18n } from "../components/i18n-provider";
+import { useToast } from "../components/toast-provider";
 import { getValidationErrors } from "../lib/auth-validation";
 
 export default function SignUpPage() {
   const router = useRouter();
   const { authState, signIn } = useAuth();
+  const { t } = useI18n();
+  const { addToast } = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -30,13 +34,14 @@ export default function SignUpPage() {
     }
 
     signIn(`${email}:${password}`);
+    addToast(t("auth.loginSuccess", "Successfully signed in!"), "success");
     router.push("/");
   }
 
   return (
     <main className="mx-auto flex min-h-[70vh] max-w-xl flex-col justify-center px-6 py-20 lg:px-8">
       <div className="rounded-3xl border border-zinc-200 bg-white p-8 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-        <p className="text-sm font-semibold uppercase tracking-[0.35em] text-zinc-500">Sign up</p>
+        <p className="text-sm font-semibold uppercase tracking-[0.35em] text-zinc-500">{t("common.signUp", "Sign Up")}</p>
         <h1 className="mt-3 text-3xl font-semibold tracking-tight">Create your account</h1>
         <p className="mt-3 text-zinc-600 dark:text-zinc-300">
           Sign up here to save your testing flow and future requests.
@@ -100,11 +105,11 @@ export default function SignUpPage() {
             type="submit"
             className="w-full rounded-2xl bg-zinc-950 px-4 py-3 text-sm font-medium text-white transition hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-950 dark:hover:bg-zinc-300"
           >
-            Create account
+            {t("common.signUp", "Create account")}
           </button>
         </form>
         <p className="mt-6 text-sm text-zinc-600 dark:text-zinc-300">
-          Already have an account? <Link href="/signin" className="font-semibold text-zinc-950 dark:text-white">Sign in</Link>
+          Already have an account? <Link href="/signin" className="font-semibold text-zinc-950 dark:text-white">{t("common.signIn", "Sign in")}</Link>
         </p>
       </div>
     </main>

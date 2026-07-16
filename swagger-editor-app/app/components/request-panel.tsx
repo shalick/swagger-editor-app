@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useAuth } from "./auth-provider";
+import { useI18n } from "./i18n-provider";
 import { detectFormat, getDefaultSpec, parseSpec, stringifySpec, type SpecFormat } from "../lib/swagger-editor";
 import { SwaggerViewer } from "./swagger-viewer";
 
@@ -10,14 +11,15 @@ const STORAGE_KEY_PREFIX = "swagger-studio-saved-spec";
 
 export function RequestPanel() {
   const { authState } = useAuth();
+  const { t } = useI18n();
   const [url, setUrl] = useState(DEFAULT_URL);
   const [method, setMethod] = useState("GET");
-  const [responseText, setResponseText] = useState("Select a request and submit it to preview the response.");
+  const [responseText, setResponseText] = useState(t("requestPanel.selectRequest", "Select a request and submit it to preview the response."));
   const [isLoading, setIsLoading] = useState(false);
   const [specText, setSpecText] = useState(getDefaultSpec("yaml"));
   const [format, setFormat] = useState<SpecFormat>("yaml");
   const [detectedFormat, setDetectedFormat] = useState<SpecFormat>("yaml");
-  const [saveStatus, setSaveStatus] = useState("Ready to import or paste a schema.");
+  const [saveStatus, setSaveStatus] = useState(t("requestPanel.readyToImport", "Ready to import or paste a schema."));
   const [isPortrait, setIsPortrait] = useState(false);
 
   const parsedSpec = useMemo(() => parseSpec(specText), [specText]);
@@ -43,12 +45,12 @@ export function RequestPanel() {
         setSpecText(stored.text);
         setFormat(stored.format === "json" ? "json" : "yaml");
         setDetectedFormat(detectFormat(stored.text));
-        setSaveStatus("Restored your last saved schema.");
+        setSaveStatus(t("requestPanel.schemaSaved", "Schema saved for this account."));
       }
     } catch {
-      setSaveStatus("Unable to restore the saved schema.");
+      setSaveStatus(t("requestPanel.unableToRestore", "Unable to restore the saved schema."));
     }
-  }, [authState.isAuthenticated, authState.token]);
+  }, [authState.isAuthenticated, authState.token, t]);
 
   useEffect(() => {
     function updateOrientation() {
@@ -63,14 +65,14 @@ export function RequestPanel() {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setIsLoading(true);
-    setResponseText("Sending request...");
+    setResponseText(t("requestPanel.sending", "Sending request..."));
 
     try {
       const result = await fetch(`/api/proxy?target=${encodeURIComponent(url)}`);
       const body = await result.text();
       setResponseText(body || `Status ${result.status}`);
     } catch {
-      setResponseText("The request failed. Check the target URL and try again.");
+      setResponseText(t("requestPanel.requestFailed", "The request failed. Check the target URL and try again."));
     } finally {
       setIsLoading(false);
     }
@@ -79,7 +81,7 @@ export function RequestPanel() {
   function handleSpecChange(nextText: string) {
     setSpecText(nextText);
     setDetectedFormat(detectFormat(nextText));
-    setSaveStatus(nextText.trim() ? "Schema updated. Validate and preview the endpoints." : "Paste or import a schema to begin.");
+    setSaveStatus(nextText.trim() ? t("requestPanel.saveStatus", "Schema updated. Validate and preview the endpoints.") : t("requestPanel.readyToImport", "Ready to import or paste a schema."));
   }
 
   function handleFormatSwitch() {
@@ -89,7 +91,7 @@ export function RequestPanel() {
       setSpecText(getDefaultSpec(nextFormat));
       setFormat(nextFormat);
       setDetectedFormat(nextFormat);
-      setSaveStatus(`Switched to ${nextFormat.toUpperCase()} mode.`);
+      setSaveStatus(`${t("requestPanel.switchedMode", "Switched to")} ${nextFormat.toUpperCase()} ${t("requestPanel.switchedMode", "mode.")}`);
       return;
     }
 
@@ -97,27 +99,27 @@ export function RequestPanel() {
       setSpecText(stringifySpec(parsedSpec.value, nextFormat));
       setFormat(nextFormat);
       setDetectedFormat(nextFormat);
-      setSaveStatus(`Switched to ${nextFormat.toUpperCase()} mode.`);
+      setSaveStatus(`${t("requestPanel.switchedMode", "Switched to")} ${nextFormat.toUpperCase()} ${t("requestPanel.switchedMode", "mode.")}`);
       return;
     }
 
     setFormat(nextFormat);
     setDetectedFormat(nextFormat);
-    setSaveStatus("The current schema could not be converted until it is valid.");
+    setSaveStatus(t("requestPanel.convertError", "The current schema could not be converted until it is valid."));
   }
 
   function handleSave() {
     if (!authState.isAuthenticated || !authState.token) {
-      setSaveStatus("Sign in to save schemas for later.");
+      setSaveStatus(t("auth.signInToSave", "Sign in to save schemas for later."));
       return;
     }
 
     try {
       const payload = JSON.stringify({ text: specText, format });
       window.localStorage.setItem(`${STORAGE_KEY_PREFIX}:${authState.token}`, payload);
-      setSaveStatus("Schema saved for this account.");
+      setSaveStatus(t("requestPanel.schemaSaved", "Schema saved for this account."));
     } catch {
-      setSaveStatus("Saving failed. Please try again.");
+      setSaveStatus(t("requestPanel.saveFailed", "Saving failed. Please try again."));
     }
   }
 
@@ -127,8 +129,8 @@ export function RequestPanel() {
         <section className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.35em] text-zinc-500">Request Builder</p>
-              <h2 className="mt-2 text-2xl font-semibold tracking-tight">Try an API call</h2>
+              <p className="text-sm font-semibold uppercase tracking-[0.35em] text-zinc-500">{t("requestPanel.requestBuilder", "Request Builder")}</p>
+              <h2 className="mt-2 text-2xl font-semibold tracking-tight">{t("requestPanel.tryApiCall", "Try an API call")}</h2>
             </div>
           </div>
 
@@ -156,13 +158,13 @@ export function RequestPanel() {
               disabled={isLoading}
               className="rounded-2xl bg-zinc-950 px-4 py-3 text-sm font-medium text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-70 dark:bg-zinc-100 dark:text-zinc-950 dark:hover:bg-zinc-300"
             >
-              {isLoading ? "Sending..." : "Send request"}
+              {isLoading ? t("requestPanel.sending", "Sending...") : t("requestPanel.sendRequest", "Send request")}
             </button>
           </form>
         </section>
 
         <section className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-          <p className="text-sm font-semibold uppercase tracking-[0.35em] text-zinc-500">Response</p>
+          <p className="text-sm font-semibold uppercase tracking-[0.35em] text-zinc-500">{t("requestPanel.response", "Response")}</p>
           <pre className="mt-4 overflow-x-auto rounded-2xl bg-zinc-950 p-4 text-sm text-zinc-100">
             {responseText}
           </pre>
@@ -173,19 +175,19 @@ export function RequestPanel() {
         <section className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.35em] text-zinc-500">Swagger Editor</p>
-              <h3 className="mt-2 text-2xl font-semibold tracking-tight">Paste, edit, and validate OpenAPI specs</h3>
+              <p className="text-sm font-semibold uppercase tracking-[0.35em] text-zinc-500">{t("requestPanel.swaggerEditor", "Swagger Editor")}</p>
+              <h3 className="mt-2 text-2xl font-semibold tracking-tight">{t("requestPanel.pasteEditValidate", "Paste, edit, and validate OpenAPI specs")}</h3>
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <span className="rounded-full border border-zinc-300 px-3 py-1 text-sm text-zinc-600 dark:border-zinc-700 dark:text-zinc-300">
-                Auto-detect: {detectedFormat.toUpperCase()}
+                {t("requestPanel.autoDetect", "Auto-detect")}: {detectedFormat.toUpperCase()}
               </span>
               <button
                 type="button"
                 onClick={handleFormatSwitch}
                 className="rounded-full border border-zinc-300 px-3 py-1 text-sm font-medium text-zinc-700 transition hover:border-zinc-400 hover:text-zinc-950 dark:border-zinc-700 dark:text-zinc-200 dark:hover:text-white"
               >
-                Switch to {format === "json" ? "YAML" : "JSON"}
+                {t("requestPanel.switchFormat", "Switch to")} {format === "json" ? "YAML" : "JSON"}
               </button>
               <button
                 type="button"
@@ -193,13 +195,13 @@ export function RequestPanel() {
                 disabled={!authState.isAuthenticated}
                 className="rounded-full bg-zinc-950 px-3 py-1 text-sm font-medium text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-70 dark:bg-zinc-100 dark:text-zinc-950 dark:hover:bg-zinc-300"
               >
-                Save
+                {t("requestPanel.save", "Save")}
               </button>
             </div>
           </div>
 
           <label className="mt-6 block text-sm font-medium text-zinc-700 dark:text-zinc-200" htmlFor="swagger-editor">
-            Specification
+            {t("requestPanel.specification", "Specification")}
           </label>
           <textarea
             id="swagger-editor"
@@ -212,7 +214,7 @@ export function RequestPanel() {
 
           <div className="mt-3 flex items-center justify-between text-sm text-zinc-600 dark:text-zinc-300">
             <span>{saveStatus}</span>
-            <span>{hasValidSpec ? "Viewer is synced" : "Waiting for a valid schema"}</span>
+            <span>{hasValidSpec ? t("requestPanel.synced", "Viewer is synced") : t("requestPanel.waiting", "Waiting for a valid schema")}</span>
           </div>
 
           {parsedSpec.error ? (
@@ -225,11 +227,11 @@ export function RequestPanel() {
         <section className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.35em] text-zinc-500">Viewer</p>
-              <h3 className="mt-2 text-2xl font-semibold tracking-tight">Endpoints</h3>
+              <p className="text-sm font-semibold uppercase tracking-[0.35em] text-zinc-500">{t("requestPanel.viewer", "Viewer")}</p>
+              <h3 className="mt-2 text-2xl font-semibold tracking-tight">{t("requestPanel.endpoints", "Endpoints")}</h3>
             </div>
             <span className="rounded-full border border-zinc-300 px-3 py-1 text-sm text-zinc-600 dark:border-zinc-700 dark:text-zinc-300">
-              {parsedSpec.endpoints.length} endpoints
+              {parsedSpec.endpoints.length} {t("requestPanel.endpoints", "endpoints")}
             </span>
           </div>
 
