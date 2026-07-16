@@ -15,33 +15,34 @@ const LANGUAGE_STORAGE_KEY = "swagger-studio-language";
 
 export function I18nProvider({ children }: { children: React.ReactNode }) {
   const [language, setLanguageState] = useState<Language>("en");
-  const [isReady, setIsReady] = useState(false);
 
-  // Load language preference from localStorage on mount
   useEffect(() => {
-    const stored = localStorage.getItem(LANGUAGE_STORAGE_KEY);
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const stored = window.localStorage.getItem(LANGUAGE_STORAGE_KEY);
     if (stored === "en" || stored === "ru") {
       setLanguageState(stored);
     } else {
-      // Default to browser language if available
-      const browserLang = navigator.language.startsWith("ru") ? "ru" : "en";
-      setLanguageState(browserLang);
+      setLanguageState(window.navigator.language.startsWith("ru") ? "ru" : "en");
     }
-    setIsReady(true);
   }, []);
 
   const setLanguage = (lang: Language) => {
     setLanguageState(lang);
-    localStorage.setItem(LANGUAGE_STORAGE_KEY, lang);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(LANGUAGE_STORAGE_KEY, lang);
+    }
   };
 
   const t = (key: string, defaultValue?: string): string => {
     const keys = key.split(".");
-    let value: any = translations[language];
+    let value: unknown = translations[language];
 
     for (const k of keys) {
       if (value && typeof value === "object" && k in value) {
-        value = value[k];
+        value = (value as Record<string, unknown>)[k];
       } else {
         return defaultValue || key;
       }
@@ -49,10 +50,6 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
 
     return typeof value === "string" ? value : defaultValue || key;
   };
-
-  if (!isReady) {
-    return null;
-  }
 
   return (
     <I18nContext.Provider value={{ language, setLanguage, t }}>

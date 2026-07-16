@@ -1,6 +1,7 @@
-const test = require("node:test");
-const assert = require("node:assert/strict");
-const { getValidationErrors } = require("./auth-validation");
+import '../test/setup';
+import test from "node:test";
+import assert from "node:assert/strict";
+import { getValidationErrors } from "./auth-validation.js";
 
 test("returns no errors for a valid email and strong password", () => {
   const errors = getValidationErrors({

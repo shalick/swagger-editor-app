@@ -9,13 +9,11 @@ export function ErrorBoundary({ children }: { children: React.ReactNode }) {
   const { t } = useI18n();
 
   useEffect(() => {
-    const handleError = (event: ErrorEvent) => {
-      console.error("Uncaught error:", event.error);
+    const handleError = (_event: ErrorEvent) => {
       addToast(t("errors.genericError", "An error occurred"), "error");
     };
 
-    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
-      console.error("Unhandled promise rejection:", event.reason);
+    const handleUnhandledRejection = (_event: PromiseRejectionEvent) => {
       addToast(t("errors.genericError", "An error occurred"), "error");
     };
 

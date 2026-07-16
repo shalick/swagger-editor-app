@@ -18,16 +18,12 @@ export function RequestPanel() {
   const [isLoading, setIsLoading] = useState(false);
   const [specText, setSpecText] = useState(getDefaultSpec("yaml"));
   const [format, setFormat] = useState<SpecFormat>("yaml");
-  const [detectedFormat, setDetectedFormat] = useState<SpecFormat>("yaml");
   const [saveStatus, setSaveStatus] = useState(t("requestPanel.readyToImport", "Ready to import or paste a schema."));
   const [isPortrait, setIsPortrait] = useState(false);
 
   const parsedSpec = useMemo(() => parseSpec(specText), [specText]);
+  const detectedFormat = useMemo(() => detectFormat(specText), [specText]);
   const hasValidSpec = !parsedSpec.error && Boolean(parsedSpec.value);
-
-  useEffect(() => {
-    setDetectedFormat(detectFormat(specText));
-  }, [specText]);
 
   useEffect(() => {
     if (!authState.isAuthenticated || !authState.token) {
@@ -42,13 +38,16 @@ export function RequestPanel() {
 
       const stored = JSON.parse(raw) as { text?: string; format?: SpecFormat };
       if (stored.text) {
-        setSpecText(stored.text);
-        setFormat(stored.format === "json" ? "json" : "yaml");
-        setDetectedFormat(detectFormat(stored.text));
-        setSaveStatus(t("requestPanel.schemaSaved", "Schema saved for this account."));
+        queueMicrotask(() => {
+          setSpecText(stored.text ?? getDefaultSpec("yaml"));
+          setFormat(stored.format === "json" ? "json" : "yaml");
+          setSaveStatus(t("requestPanel.schemaSaved", "Schema saved for this account."));
+        });
       }
     } catch {
-      setSaveStatus(t("requestPanel.unableToRestore", "Unable to restore the saved schema."));
+      queueMicrotask(() => {
+        setSaveStatus(t("requestPanel.unableToRestore", "Unable to restore the saved schema."));
+      });
     }
   }, [authState.isAuthenticated, authState.token, t]);
 
@@ -68,9 +67,26 @@ export function RequestPanel() {
     setResponseText(t("requestPanel.sending", "Sending request..."));
 
     try {
-      const result = await fetch(`/api/proxy?target=${encodeURIComponent(url)}`);
+      const result = await fetch(`/api/proxy?target=${encodeURIComponent(url)}`, {
+        method,
+        headers: {
+          Accept: "application/json",
+        },
+      });
       const body = await result.text();
-      setResponseText(body || `Status ${result.status}`);
+
+      if (!result.ok) {
+        setResponseText(
+          t(
+            "requestPanel.httpError",
+            "Request failed with status {status}: {message}",
+          )
+            .replace("{status}", String(result.status))
+            .replace("{message}", body || result.statusText),
+        );
+      } else {
+        setResponseText(body || `Status ${result.status}`);
+      }
     } catch {
       setResponseText(t("requestPanel.requestFailed", "The request failed. Check the target URL and try again."));
     } finally {
@@ -80,7 +96,6 @@ export function RequestPanel() {
 
   function handleSpecChange(nextText: string) {
     setSpecText(nextText);
-    setDetectedFormat(detectFormat(nextText));
     setSaveStatus(nextText.trim() ? t("requestPanel.saveStatus", "Schema updated. Validate and preview the endpoints.") : t("requestPanel.readyToImport", "Ready to import or paste a schema."));
   }
 
@@ -90,7 +105,6 @@ export function RequestPanel() {
     if (!specText.trim()) {
       setSpecText(getDefaultSpec(nextFormat));
       setFormat(nextFormat);
-      setDetectedFormat(nextFormat);
       setSaveStatus(`${t("requestPanel.switchedMode", "Switched to")} ${nextFormat.toUpperCase()} ${t("requestPanel.switchedMode", "mode.")}`);
       return;
     }
@@ -98,13 +112,11 @@ export function RequestPanel() {
     if (parsedSpec.value) {
       setSpecText(stringifySpec(parsedSpec.value, nextFormat));
       setFormat(nextFormat);
-      setDetectedFormat(nextFormat);
       setSaveStatus(`${t("requestPanel.switchedMode", "Switched to")} ${nextFormat.toUpperCase()} ${t("requestPanel.switchedMode", "mode.")}`);
       return;
     }
 
     setFormat(nextFormat);
-    setDetectedFormat(nextFormat);
     setSaveStatus(t("requestPanel.convertError", "The current schema could not be converted until it is valid."));
   }
 

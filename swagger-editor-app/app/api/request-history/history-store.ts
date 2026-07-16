@@ -59,13 +59,6 @@ export const getTokenFromRequest = (request: NextRequest) => {
   return null;
 };
 
-const byteLength = (value: string | undefined | null) => {
-  if (!value) {
-    return 0;
-  }
-  return Buffer.byteLength(value, "utf8");
-};
-
 const measureSize = (entry: StoredRequestInfo | StoredResponseInfo | undefined | null) => {
   if (!entry) {
     return 0;

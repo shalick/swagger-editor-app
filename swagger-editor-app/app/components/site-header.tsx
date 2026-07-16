@@ -18,6 +18,7 @@ export function SiteHeader() {
       setIsSticky(scrollPosition > 0);
     };
 
+    handleScroll();
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);

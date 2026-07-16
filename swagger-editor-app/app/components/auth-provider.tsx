@@ -65,21 +65,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    const stored = readStoredAuth();
-    setAuthState(stored);
+    setAuthState(readStoredAuth());
     setIsReady(true);
   }, []);
-
-  useEffect(() => {
-    if (!isReady) {
-      return;
-    }
-
-    if (authState.isAuthenticated && authState.expiresAt && authState.expiresAt <= Date.now()) {
-      setAuthState({ token: null, expiresAt: null, isAuthenticated: false });
-      persistAuth({ token: null, expiresAt: null, isAuthenticated: false });
-    }
-  }, [authState, isReady]);
 
   const signIn = useCallback((token: string) => {
     const nextState = {

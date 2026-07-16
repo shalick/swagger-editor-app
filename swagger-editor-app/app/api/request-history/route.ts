@@ -16,8 +16,7 @@ export async function POST(request: NextRequest) {
     saveRequestHistoryEntry(token, entry);
 
     return NextResponse.json({ success: true, count: getRequestHistoryEntries(token).length }, { status: 201 });
-  } catch (error) {
-    console.error('Request history error:', error);
+  } catch {
     return NextResponse.json({ error: 'Failed to save request history' }, { status: 500 });
   }
 }
@@ -32,8 +31,7 @@ export async function GET(request: NextRequest) {
     const entries = getRequestHistoryEntries(token);
 
     return NextResponse.json({ success: true, count: entries.length, entries }, { status: 200 });
-  } catch (error) {
-    console.error('Request history error:', error);
+  } catch {
     return NextResponse.json({ error: 'Failed to retrieve request history' }, { status: 500 });
   }
 }
@@ -48,8 +46,7 @@ export async function DELETE(request: NextRequest) {
     const response = NextResponse.json({ success: true, message: 'Request history cleared' }, { status: 200 });
     response.cookies.delete("swagger-auth-token");
     return response;
-  } catch (error) {
-    console.error('Request history error:', error);
+  } catch {
     return NextResponse.json({ error: 'Failed to clear request history' }, { status: 500 });
   }
 }

@@ -32,7 +32,7 @@ export default async function HistoryPage() {
       {entries.length === 0 ? (
         <section className="rounded-3xl border border-zinc-200 bg-white p-10 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
           <p className="text-sm font-semibold uppercase tracking-[0.35em] text-zinc-500">No requests yet</p>
-          <h2 className="mt-3 text-2xl font-semibold text-zinc-950 dark:text-white">You haven't executed any requests yet</h2>
+          <h2 className="mt-3 text-2xl font-semibold text-zinc-950 dark:text-white">You haven&apos;t executed any requests yet</h2>
           <p className="mt-3 text-zinc-600 dark:text-zinc-300">
             Execute a request from the editor to populate your history, then return here to review analytics.
           </p>
