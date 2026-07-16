@@ -117,8 +117,21 @@ export function extractEndpointDetails(
     responses: extractResponses(operation.responses),
   };
 
+  // Merge path-level parameters (path item) with operation.parameters
+  const pathItem = isRecord(spec?.paths && (spec.paths as Record<string, unknown>)[path])
+    ? ((spec!.paths as Record<string, unknown>)[path] as Record<string, unknown>)
+    : undefined;
+
+  const mergedParameters: unknown[] = [];
+  if (isArray(pathItem?.parameters)) {
+    mergedParameters.push(...(pathItem!.parameters as unknown[]));
+  }
   if (isArray(operation.parameters)) {
-    detail.parameters = extractParameters(operation.parameters);
+    mergedParameters.push(...(operation.parameters as unknown[]));
+  }
+
+  if (mergedParameters.length > 0) {
+    detail.parameters = extractParameters(mergedParameters);
   }
 
   if (operation.requestBody) {
@@ -141,17 +154,25 @@ export function getExampleForSchema(schema: unknown, mediaType: string = 'applic
   // Generate a basic example based on schema type
   if (schema.type === 'object' && isRecord(schema.properties)) {
     const properties: Record<string, unknown> = {};
-    Object.keys(schema.properties).forEach((key) => {
-      properties[key] = `<${key}>`;
+    const required: string[] = Array.isArray(schema.required) ? schema.required : [];
+    Object.entries(schema.properties).forEach(([key, propSchema]) => {
+      if (isRecord(propSchema) && typeof propSchema.type === 'string') {
+        properties[key] = { type: propSchema.type, required: required.includes(key) };
+      } else if (isRecord(propSchema)) {
+        properties[key] = { type: 'object', required: required.includes(key) };
+      } else {
+        properties[key] = { type: typeof propSchema, required: required.includes(key) };
+      }
     });
-    return JSON.stringify(properties, null, 2);
+    return JSON.stringify({ type: 'object', properties, required }, null, 2);
   }
 
   if (schema.type === 'array') {
-    return JSON.stringify([], null, 2);
+    const items = isRecord(schema.items) ? getExampleForSchema(schema.items, mediaType) : '[]';
+    return JSON.stringify({ type: 'array', items: JSON.parse(items) }, null, 2);
   }
 
-  return '{}';
+  return JSON.stringify({}, null, 2);
 }
 
 export function getMediaTypeExample(

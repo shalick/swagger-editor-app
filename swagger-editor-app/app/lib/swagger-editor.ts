@@ -25,17 +25,20 @@ paths:
         '200':
           description: Success`;
 
-function looksLikeJson(text: string) {
-  const trimmed = text.trim();
-  return trimmed.startsWith("{") || trimmed.startsWith("[");
-}
-
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 export function detectFormat(text: string): SpecFormat {
-  return looksLikeJson(text) ? "json" : "yaml";
+  const trimmed = String(text ?? '').trim();
+  if (!trimmed) return 'yaml';
+  // Try JSON first — if it parses, treat as JSON; otherwise fallback to YAML
+  try {
+    JSON.parse(trimmed);
+    return 'json';
+  } catch {}
+
+  return 'yaml';
 }
 
 export function parseSpec(text: string): ParseResult {

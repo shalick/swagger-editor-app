@@ -44,7 +44,7 @@ export default async function HistoryPage() {
               Go to Editor
             </Link>
             <Link
-              href="/about"
+              href="/"
               className="rounded-full border border-zinc-300 px-5 py-3 text-sm font-medium text-zinc-700 transition hover:border-zinc-400 hover:text-zinc-950 dark:border-zinc-700 dark:text-zinc-200 dark:hover:text-white"
             >
               Go to Viewer

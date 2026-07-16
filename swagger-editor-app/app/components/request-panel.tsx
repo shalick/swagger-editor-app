@@ -20,6 +20,7 @@ export function RequestPanel() {
   const [format, setFormat] = useState<SpecFormat>("yaml");
   const [saveStatus, setSaveStatus] = useState(t("requestPanel.readyToImport", "Ready to import or paste a schema."));
   const [isPortrait, setIsPortrait] = useState(false);
+  const [importUrl, setImportUrl] = useState('');
 
   const parsedSpec = useMemo(() => parseSpec(specText), [specText]);
   const detectedFormat = useMemo(() => detectFormat(specText), [specText]);
@@ -135,6 +136,32 @@ export function RequestPanel() {
     }
   }
 
+  async function handleImportUrl() {
+    if (!importUrl.trim()) return;
+    try {
+      const res = await fetch(importUrl.trim());
+      const text = await res.text();
+      setSpecText(text);
+      setFormat(detectFormat(text));
+      setSaveStatus(t("requestPanel.imported", "Schema imported from URL."));
+    } catch {
+      setSaveStatus(t("requestPanel.importFailed", "Failed to import from URL."));
+    }
+  }
+
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const text = String(reader.result ?? '');
+      setSpecText(text);
+      setFormat(detectFormat(text));
+      setSaveStatus(t("requestPanel.imported", "Schema imported from file."));
+    };
+    reader.readAsText(file);
+  }
+
   return (
     <div className="space-y-6">
       <div className={`grid gap-6 ${isPortrait ? "grid-cols-1" : "lg:grid-cols-[1.1fr_0.9fr]"}`}>
@@ -143,6 +170,11 @@ export function RequestPanel() {
             <div>
               <p className="text-sm font-semibold uppercase tracking-[0.35em] text-zinc-500">{t("requestPanel.requestBuilder", "Request Builder")}</p>
               <h2 className="mt-2 text-2xl font-semibold tracking-tight">{t("requestPanel.tryApiCall", "Try an API call")}</h2>
+            </div>
+            <div className="flex items-center gap-2">
+              <input type="file" accept=".json,.yaml,.yml,text/*" onChange={handleFileChange} className="rounded-full border border-zinc-300 px-3 py-1 text-sm" />
+              <input value={importUrl} onChange={(e) => setImportUrl(e.target.value)} placeholder="Import from URL" className="rounded-full border border-zinc-300 px-3 py-1 text-sm" />
+              <button type="button" onClick={handleImportUrl} className="rounded-full border border-zinc-300 px-3 py-1 text-sm">Import</button>
             </div>
           </div>
 

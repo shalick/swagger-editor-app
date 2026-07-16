@@ -3,11 +3,13 @@ function isValidEmail(email) {
 }
 
 function hasLetter(value) {
-  return /[A-Za-z]/.test(value);
+  // Accept any Unicode letter
+  return /\p{L}/u.test(value);
 }
 
 function hasDigit(value) {
-  return /\d/.test(value);
+  // Accept any Unicode digit
+  return /\p{N}/u.test(value);
 }
 
 function hasSpecial(value) {

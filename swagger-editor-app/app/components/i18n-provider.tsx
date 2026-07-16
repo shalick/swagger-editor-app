@@ -33,6 +33,10 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
     setLanguageState(lang);
     if (typeof window !== "undefined") {
       window.localStorage.setItem(LANGUAGE_STORAGE_KEY, lang);
+      try {
+        // also set a cookie so server layout can read it
+        document.cookie = `swagger_lang=${lang}; path=/; max-age=${60 * 60 * 24 * 365}`;
+      } catch {}
     }
   };
 

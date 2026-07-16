@@ -73,6 +73,7 @@ export function TryItOut({ endpoint, baseUrl, onResponseChange }: TryItOutProps)
       // Send through proxy to avoid CORS
       const encodedUrl = encodeURIComponent(url);
       const proxyUrl = `/api/proxy?target=${encodedUrl}`;
+      const startedAt = performance.now();
       const result = await fetch(proxyUrl, requestInit);
       
       const responseBody = await result.text();
@@ -82,7 +83,6 @@ export function TryItOut({ endpoint, baseUrl, onResponseChange }: TryItOutProps)
         responseHeaders[key] = value;
       });
 
-      const startedAt = performance.now();
       const responseData = {
         status: result.status,
         headers: responseHeaders,
