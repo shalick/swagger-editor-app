@@ -1,0 +1,44 @@
+{
+  "name": "swagger-editor-app",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
+    "format": "prettier --write .",
+    "test": "set \"NODE_OPTIONS=--require ./app/test/setup.ts\" && npx tsx --test \"app/**/*.test.*\"",
+    "coverage": "set \"NODE_OPTIONS=--require ./app/test/setup.ts\" && npx c8 --check-coverage --lines 50 --functions 50 --branches 50 --statements 80 npx tsx --test \"app/**/*.test.*\"",
+    "prepare": "husky install"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx,json,md}": [
+      "prettier --write",
+      "eslint --fix"
+    ]
+  },
+  "dependencies": {
+    "@types/jsdom": "^28.0.3",
+    "jsdom": "^29.1.1",
+    "next": "16.2.10",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "yaml": "^2.8.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "c8": "^8.0.0",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.10",
+    "husky": "^9.0.0",
+    "lint-staged": "^14.0.0",
+    "prettier": "^3.0.0",
+    "tailwindcss": "^4",
+    "tsx": "^4.23.1",
+    "typescript": "^5"
+  }
+}
